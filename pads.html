@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#10101b">
+  <title>Beat Pads — Boîte à rythmes</title>
+  <style>
+    :root{color-scheme:dark;--bg:#0d0e17;--panel:#181a28;--line:#2c3044;--text:#f4f5fc;--muted:#9da4bd;--mint:#78f0ca;--violet:#ab8cff}
+    *{box-sizing:border-box}body{margin:0;min-height:100vh;min-height:100dvh;padding:25px 16px;display:grid;place-items:center;color:var(--text);font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;background:radial-gradient(ellipse at 10% 10%,#30254e 0,transparent 35%),radial-gradient(ellipse at 90% 85%,#143d40 0,transparent 31%),var(--bg)}
+    .app{width:min(100%,510px)}header{text-align:center;margin-bottom:21px}.eyebrow{font-size:.7rem;letter-spacing:.22em;text-transform:uppercase;color:var(--mint);font-weight:800}h1{font-size:clamp(2.2rem,10vw,3.2rem);line-height:1;letter-spacing:-.06em;margin:8px 0}.sub{margin:9px 0 0;color:var(--muted);font-size:.92rem}
+    .controls{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:15px}.control{background:#181a28dd;border:1px solid var(--line);border-radius:16px;padding:12px 14px}.control-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:7px}.control label{font-size:.75rem;color:var(--muted);font-weight:750;text-transform:uppercase;letter-spacing:.08em}.value{font-weight:800;font-variant-numeric:tabular-nums;color:var(--mint)}input[type=range]{width:100%;height:5px;accent-color:var(--mint);cursor:pointer}.tempo-step{display:flex;align-items:center;gap:6px}.tempo-step button{width:26px;height:26px;border:1px solid var(--line);border-radius:8px;background:#24273a;color:var(--text);font-size:1rem;cursor:pointer}.tempo-step button:active{transform:scale(.93)}
+    .pads{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}.pad{position:relative;overflow:hidden;min-height:clamp(104px,29vw,142px);border:1px solid var(--line);border-radius:19px;padding:15px;text-align:left;color:var(--text);background:linear-gradient(145deg,#202337,#171925);cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;transition:transform .1s,border-color .15s,filter .15s;box-shadow:0 9px 20px #0003}.pad::after{content:"";position:absolute;width:95px;height:95px;right:-34px;bottom:-40px;border-radius:50%;background:var(--glow);filter:blur(4px);opacity:.15;transition:opacity .15s}.pad:hover{border-color:var(--glow);filter:brightness(1.1)}.pad:active,.pad.hit{transform:scale(.965);border-color:var(--glow);filter:brightness(1.35)}.pad:active::after,.pad.hit::after{opacity:.55}.pad:focus-visible,button:focus-visible{outline:3px solid var(--mint);outline-offset:3px}.pad-number{font-size:.67rem;color:var(--muted);letter-spacing:.12em;font-weight:800}.pad-name{display:block;margin-top:12px;font-size:1.18rem;font-weight:820;letter-spacing:-.025em}.pad-key{position:absolute;right:13px;top:13px;padding:3px 7px;border-radius:6px;background:#ffffff0b;color:#9da4bd;font:700 .68rem ui-monospace,monospace}.pad-desc{display:block;margin-top:2px;color:var(--muted);font-size:.77rem}.kick{--glow:#ff806d}.snare{--glow:#ffbd69}.hat{--glow:#f4e478}.openhat{--glow:#8be6d1}.bass{--glow:#ab8cff}.clap{--glow:#ff84c8}.tom{--glow:#7cb9ff}.rim{--glow:#b7f27b}
+    .bottom{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:15px}.hint{font-size:.77rem;color:var(--muted)}.play{border:0;border-radius:999px;padding:12px 19px;background:var(--mint);color:#10221e;font:800 .9rem system-ui,sans-serif;cursor:pointer;box-shadow:0 7px 22px #54dfb633;white-space:nowrap}.play:hover{filter:brightness(1.07)}.play.playing{background:#342b4d;color:#e7dcff;box-shadow:inset 0 0 0 1px #8e72d2}
+    @media(max-width:350px){body{padding:18px 11px}.pads{gap:8px}.pad{padding:12px;min-height:100px}.pad-name{font-size:1.05rem}.control{padding:10px}}
+    @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition-duration:.01ms!important}}
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header><div class="eyebrow">Studio de poche</div><h1>Beat Pads</h1><p class="sub">Tapez sur les pads et créez votre rythme.</p></header>
+    <section class="controls" aria-label="Réglages audio">
+      <div class="control"><div class="control-top"><label for="volume">Volume</label><span class="value" id="volume-value">70 %</span></div><input id="volume" type="range" min="0" max="100" value="70" aria-label="Volume général"></div>
+      <div class="control"><div class="control-top"><label for="tempo">Tempo</label><span class="tempo-step"><button id="slower" type="button" aria-label="Ralentir">−</button><span class="value" id="tempo-value">110 BPM</span><button id="faster" type="button" aria-label="Accélérer">＋</button></span></div><input id="tempo" type="range" min="60" max="180" value="110" aria-label="Tempo en battements par minute"></div>
+    </section>
+    <section class="pads" aria-label="Pads de sons">
+      <button class="pad kick" data-sound="kick"><span class="pad-number">01 · RYTHME</span><span class="pad-key">Q</span><span class="pad-name">Kick</span><span class="pad-desc">Grosse caisse</span></button>
+      <button class="pad snare" data-sound="snare"><span class="pad-number">02 · RYTHME</span><span class="pad-key">W</span><span class="pad-name">Snare</span><span class="pad-desc">Caisse claire</span></button>
+      <button class="pad hat" data-sound="hat"><span class="pad-number">03 · CYMBALE</span><span class="pad-key">E</span><span class="pad-name">Hi-hat</span><span class="pad-desc">Fermé</span></button>
+      <button class="pad openhat" data-sound="openhat"><span class="pad-number">04 · CYMBALE</span><span class="pad-key">R</span><span class="pad-name">Open hat</span><span class="pad-desc">Ouvert</span></button>
+      <button class="pad bass" data-sound="bass"><span class="pad-number">05 · TONALITÉ</span><span class="pad-key">A</span><span class="pad-name">Bass</span><span class="pad-desc">Basse synthé</span></button>
+      <button class="pad clap" data-sound="clap"><span class="pad-number">06 · RYTHME</span><span class="pad-key">S</span><span class="pad-name">Clap</span><span class="pad-desc">Claquement</span></button>
+      <button class="pad tom" data-sound="tom"><span class="pad-number">07 · PERCUSSION</span><span class="pad-key">D</span><span class="pad-name">Tom</span><span class="pad-desc">Tom grave</span></button>
+      <button class="pad rim" data-sound="rim"><span class="pad-number">08 · PERCUSSION</span><span class="pad-key">F</span><span class="pad-name">Rim</span><span class="pad-desc">Rimshot</span></button>
+    </section>
+    <div class="bottom"><span class="hint">Raccourcis clavier : Q W E R · A S D F</span><button class="play" id="play" type="button" aria-pressed="false">▶ &nbsp;Lancer le beat</button></div>
+  </main>
+  <script>
+    (() => {
+      let context, master, sequenceTimer = null, step = 0;
+      const pads = [...document.querySelectorAll('.pad')];
+      const volume = document.getElementById('volume');
+      const tempo = document.getElementById('tempo');
+      const volumeValue = document.getElementById('volume-value');
+      const tempoValue = document.getElementById('tempo-value');
+      const playButton = document.getElementById('play');
+      const patterns = {
+        kick: [0, 8], snare: [4, 12], hat: [0, 2, 4, 6, 8, 10, 12, 14], openhat: [14], bass: [0, 6, 10], clap: [12], tom: [7], rim: [3, 11]
+      };
+      async function audio() {
+        if (!context) {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          if (!AudioContextClass) { alert('Votre navigateur ne prend pas en charge la Web Audio API.'); return false; }
+          context = new AudioContextClass(); master = context.createGain(); master.gain.value = volume.value / 100; master.connect(context.destination);
+        }
+        if (context.state === 'suspended') await context.resume();
+        return true;
+      }
+      function output(node, time, level = 1) {
+        const gain = context.createGain(); gain.gain.value = level; node.connect(gain); gain.connect(master); return gain;
+      }
+      function noiseBuffer(duration) {
+        const buffer = context.createBuffer(1, Math.ceil(context.sampleRate * duration), context.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+        return buffer;
+      }
+      function playSound(name, time = context.currentTime) {
+        const osc = (type, frequency, endFrequency, duration, level, dest = master) => {
+          const o = context.createOscillator(), g = context.createGain(); o.type = type;
+          o.frequency.setValueAtTime(frequency, time); if (endFrequency) o.frequency.exponentialRampToValueAtTime(endFrequency, time + duration);
+          g.gain.setValueAtTime(level, time); g.gain.exponentialRampToValueAtTime(.001, time + duration);
+          o.connect(g); g.connect(dest); o.start(time); o.stop(time + duration + .015);
+        };
+        const hiss = (duration, level, highpass, endLevel = .001) => {
+          const src = context.createBufferSource(), filter = context.createBiquadFilter(), gain = context.createGain();
+          src.buffer = noiseBuffer(duration); filter.type = 'highpass'; filter.frequency.value = highpass;
+          gain.gain.setValueAtTime(level, time); gain.gain.exponentialRampToValueAtTime(endLevel, time + duration);
+          src.connect(filter); filter.connect(gain); gain.connect(master); src.start(time); src.stop(time + duration);
+        };
+        switch (name) {
+          case 'kick': osc('sine', 150, 42, .42, 1.15); break;
+          case 'snare': osc('triangle', 190, 90, .16, .38); hiss(.22, .72, 900); break;
+          case 'hat': hiss(.075, .36, 7200); break;
+          case 'openhat': hiss(.42, .34, 6200); break;
+          case 'bass': osc('sawtooth', 110, 55, .32, .32); osc('sine', 55, 42, .38, .55); break;
+          case 'clap': for (let i = 0; i < 3; i++) { const offset = i * .025; const src = context.createBufferSource(), filter = context.createBiquadFilter(), g = context.createGain(); src.buffer = noiseBuffer(.18); filter.type = 'bandpass'; filter.frequency.value = 1600; g.gain.setValueAtTime(.43, time + offset); g.gain.exponentialRampToValueAtTime(.001, time + offset + .16); src.connect(filter); filter.connect(g); g.connect(master); src.start(time + offset); src.stop(time + offset + .18); } break;
+          case 'tom': osc('sine', 180, 75, .38, .8); break;
+          case 'rim': osc('triangle', 780, 260, .075, .55); break;
+        }
+      }
+      function trigger(name) {
+        if (!context) return;
+        playSound(name);
+        const pad = pads.find(item => item.dataset.sound === name);
+        if (pad) { pad.classList.remove('hit'); void pad.offsetWidth; pad.classList.add('hit'); setTimeout(() => pad.classList.remove('hit'), 110); }
+      }
+      pads.forEach(pad => pad.addEventListener('pointerdown', async event => { event.preventDefault(); if (await audio()) trigger(pad.dataset.sound); }));
+      document.addEventListener('keydown', async event => {
+        if (event.repeat || ['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+        const map = {q:'kick',w:'snare',e:'hat',r:'openhat',a:'bass',s:'clap',d:'tom',f:'rim'};
+        const sound = map[event.key.toLowerCase()]; if (sound && await audio()) trigger(sound);
+      });
+      volume.addEventListener('input', () => { volumeValue.textContent = `${volume.value} %`; if (master && context) master.gain.setTargetAtTime(volume.value / 100, context.currentTime, .015); });
+      tempo.addEventListener('input', () => { tempoValue.textContent = `${tempo.value} BPM`; if (sequenceTimer) startSequence(); });
+      document.getElementById('slower').addEventListener('click', () => { tempo.value = Math.max(60, Number(tempo.value) - 5); tempo.dispatchEvent(new Event('input')); });
+      document.getElementById('faster').addEventListener('click', () => { tempo.value = Math.min(180, Number(tempo.value) + 5); tempo.dispatchEvent(new Event('input')); });
+      function startSequence() {
+        clearInterval(sequenceTimer); sequenceTimer = null;
+        if (!playButton.classList.contains('playing')) return;
+        const tick = () => {
+          const beat = step % 16;
+          for (const [name, hits] of Object.entries(patterns)) if (hits.includes(beat)) { playSound(name); const pad = pads.find(item => item.dataset.sound === name); pad.classList.add('hit'); setTimeout(() => pad.classList.remove('hit'), 100); }
+          step = (step + 1) % 16;
+        };
+        tick(); sequenceTimer = setInterval(tick, 60000 / Number(tempo.value) / 4);
+      }
+      playButton.addEventListener('click', async () => {
+        if (playButton.classList.contains('playing')) {
+          clearInterval(sequenceTimer); sequenceTimer = null; playButton.classList.remove('playing'); playButton.textContent = '▶  Lancer le beat'; playButton.setAttribute('aria-pressed', 'false'); step = 0;
+        } else if (await audio()) {
+          playButton.classList.add('playing'); playButton.textContent = '■  Arrêter le beat'; playButton.setAttribute('aria-pressed', 'true'); startSequence();
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

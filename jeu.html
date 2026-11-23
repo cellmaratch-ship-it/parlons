@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b1020">
+  <title>Memory — Jeu de mémoire</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0b1020;
+      --panel: rgba(20, 28, 50, .84);
+      --card: #192440;
+      --card-back: linear-gradient(145deg, #202e50, #17213b);
+      --accent: #a78bfa;
+      --accent2: #67e8f9;
+      --muted: #9aa7c2;
+      --text: #f5f7ff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; min-height: 100dvh; padding: 28px 16px;
+      display: grid; place-items: center; overflow-x: hidden;
+      color: var(--text); font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      background: radial-gradient(ellipse at 12% 8%, #28315c 0, transparent 34%),
+                  radial-gradient(ellipse at 90% 90%, #18384a 0, transparent 34%), var(--bg);
+    }
+    .game { width: min(100%, 520px); }
+    header { text-align: center; margin-bottom: 22px; }
+    .eyebrow { color: var(--accent2); text-transform: uppercase; letter-spacing: .2em; font-weight: 750; font-size: .7rem; }
+    h1 { margin: 7px 0 5px; font-size: clamp(2rem, 9vw, 3rem); letter-spacing: -.055em; line-height: 1; }
+    .subtitle { color: var(--muted); margin: 10px 0 0; font-size: .94rem; }
+    .dashboard {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; margin-bottom: 15px;
+      padding: 10px; border: 1px solid rgba(184, 198, 232, .11); border-radius: 18px;
+      background: var(--panel); box-shadow: 0 14px 40px #0003; backdrop-filter: blur(12px);
+    }
+    .stat { text-align: center; padding: 5px 2px; }
+    .stat-label { display: block; color: var(--muted); font-size: .69rem; text-transform: uppercase; letter-spacing: .1em; }
+    .stat-value { display: block; margin-top: 3px; font-size: 1.25rem; font-weight: 750; font-variant-numeric: tabular-nums; }
+    .board {
+      display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(8px, 2.6vw, 13px);
+      perspective: 900px;
+    }
+    .card {
+      aspect-ratio: 1; position: relative; border: 0; padding: 0; border-radius: clamp(12px, 3vw, 18px);
+      background: transparent; cursor: pointer; -webkit-tap-highlight-color: transparent;
+      transform-style: preserve-3d; transition: transform .42s cubic-bezier(.2,.75,.25,1), filter .2s;
+    }
+    .card:hover:not(:disabled) { filter: brightness(1.15); }
+    .card:focus-visible, .replay:focus-visible { outline: 3px solid var(--accent2); outline-offset: 3px; }
+    .card.flipped, .card.matched { transform: rotateY(180deg); }
+    .face {
+      position: absolute; inset: 0; display: grid; place-items: center; border-radius: inherit;
+      backface-visibility: hidden; -webkit-backface-visibility: hidden;
+      border: 1px solid rgba(190, 205, 244, .13); box-shadow: 0 7px 18px #0003;
+    }
+    .back { background: var(--card-back); color: #9cace0; font-size: clamp(1.3rem, 7vw, 2rem); }
+    .front { transform: rotateY(180deg); background: linear-gradient(145deg, #293657, #1b2743); font-size: clamp(1.75rem, 10vw, 3rem); }
+    .card.matched .front { border-color: rgba(103, 232, 249, .55); background: linear-gradient(145deg, #16404b, #20334a); }
+    .card:disabled { cursor: default; }
+    .actions { display: flex; justify-content: center; margin-top: 18px; }
+    .replay {
+      border: 1px solid rgba(199, 184, 255, .35); border-radius: 999px; padding: 11px 22px;
+      color: #fff; font: inherit; font-weight: 700; cursor: pointer;
+      background: linear-gradient(110deg, #7758d9, #5842ad); box-shadow: 0 7px 22px #684bc544;
+      transition: transform .18s, filter .18s;
+    }
+    .replay:hover { transform: translateY(-2px); filter: brightness(1.13); }
+    .message { min-height: 1.5em; text-align: center; color: var(--accent2); font-weight: 650; margin: 12px 0 0; }
+    @media (max-width: 360px) { body { padding: 20px 12px; } .dashboard { gap: 3px; padding: 8px 5px; } }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; } }
+  </style>
+</head>
+<body>
+  <main class="game">
+    <header>
+      <div class="eyebrow">À vous de jouer</div>
+      <h1>Memory</h1>
+      <p class="subtitle">Retrouvez les 8 paires le plus vite possible.</p>
+    </header>
+    <section class="dashboard" aria-label="Statistiques de la partie">
+      <div class="stat"><span class="stat-label">Coups</span><span class="stat-value" id="moves">0</span></div>
+      <div class="stat"><span class="stat-label">Temps</span><span class="stat-value" id="timer">00:00</span></div>
+      <div class="stat"><span class="stat-label">Paires</span><span class="stat-value" id="pairs">0 / 8</span></div>
+    </section>
+    <section class="board" id="board" aria-label="Plateau de cartes"></section>
+    <div class="actions"><button class="replay" id="replay" type="button">↻ &nbsp;Rejouer</button></div>
+    <p class="message" id="message" aria-live="polite"></p>
+  </main>
+  <script>
+    (() => {
+      const emojis = ['🦊', '🐼', '🐸', '🦄', '🐙', '🐝', '🦋', '🐳'];
+      const board = document.getElementById('board');
+      const movesDisplay = document.getElementById('moves');
+      const timerDisplay = document.getElementById('timer');
+      const pairsDisplay = document.getElementById('pairs');
+      const message = document.getElementById('message');
+      let first = null, locked = false, moves = 0, matched = 0, seconds = 0, interval = null, started = false;
+
+      function shuffle(items) {
+        for (let i = items.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [items[i], items[j]] = [items[j], items[i]];
+        }
+        return items;
+      }
+      function formatTime(value) {
+        return `${String(Math.floor(value / 60)).padStart(2, '0')}:${String(value % 60).padStart(2, '0')}`;
+      }
+      function startTimer() {
+        if (started) return;
+        started = true;
+        interval = setInterval(() => { seconds++; timerDisplay.textContent = formatTime(seconds); }, 1000);
+      }
+      function flipBack(a, b) {
+        a.classList.remove('flipped'); b.classList.remove('flipped');
+        a.setAttribute('aria-label', 'Carte cachée'); b.setAttribute('aria-label', 'Carte cachée');
+        a.disabled = false; b.disabled = false; first = null; locked = false;
+      }
+      function choose(card) {
+        if (locked || card === first || card.classList.contains('matched') || card.classList.contains('flipped')) return;
+        startTimer();
+        card.classList.add('flipped'); card.setAttribute('aria-label', `Carte ${card.dataset.emoji}`);
+        if (!first) { first = card; return; }
+        moves++; movesDisplay.textContent = moves;
+        const previous = first;
+        if (previous.dataset.emoji === card.dataset.emoji) {
+          previous.classList.add('matched'); card.classList.add('matched');
+          previous.disabled = true; card.disabled = true; first = null; matched++;
+          pairsDisplay.textContent = `${matched} / 8`;
+          if (matched === emojis.length) {
+            clearInterval(interval);
+            message.textContent = `Bravo ! ${moves} coups en ${formatTime(seconds)} ✨`;
+          }
+        } else {
+          locked = true;
+          setTimeout(() => flipBack(previous, card), 750);
+        }
+      }
+      function newGame() {
+        clearInterval(interval); interval = null; first = null; locked = false;
+        moves = 0; matched = 0; seconds = 0; started = false;
+        movesDisplay.textContent = '0'; pairsDisplay.textContent = '0 / 8'; timerDisplay.textContent = '00:00'; message.textContent = '';
+        board.replaceChildren();
+        shuffle([...emojis, ...emojis]).forEach((emoji, index) => {
+          const card = document.createElement('button');
+          card.type = 'button'; card.className = 'card'; card.dataset.emoji = emoji;
+          card.setAttribute('aria-label', 'Carte cachée'); card.setAttribute('aria-pressed', 'false');
+          card.innerHTML = '<span class="face back" aria-hidden="true">✦</span><span class="face front" aria-hidden="true"></span>';
+          card.querySelector('.front').textContent = emoji;
+          card.addEventListener('click', () => choose(card));
+          board.append(card);
+        });
+      }
+      document.getElementById('replay').addEventListener('click', newGame);
+      newGame();
+    })();
+  </script>
+</body>
+</html>

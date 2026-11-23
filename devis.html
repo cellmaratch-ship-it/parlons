@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101827">
+  <title>Générateur de devis</title>
+  <style>
+    :root{color-scheme:dark;--bg:#0c1220;--panel:#151e30;--line:#2a3850;--text:#f2f5fc;--muted:#a1aec4;--accent:#78e2cf;--accent-dark:#142d32}
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 15% 0,#1d3551 0,transparent 42%),var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;padding:32px 16px}
+    .wrap{max-width:900px;margin:auto}.top{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:22px}.eyebrow{color:var(--accent);font-size:.72rem;font-weight:800;letter-spacing:.17em;text-transform:uppercase}h1{font-size:clamp(2rem,7vw,3rem);letter-spacing:-.05em;line-height:1.05;margin:5px 0}.intro{color:var(--muted);margin:8px 0 0}
+    .actions{display:flex;gap:10px;flex-wrap:wrap}.button{border:1px solid var(--line);border-radius:12px;background:#202c41;color:var(--text);padding:11px 16px;font:inherit;font-weight:700;cursor:pointer;transition:.18s}.button:hover{filter:brightness(1.16);transform:translateY(-1px)}.button.primary{background:var(--accent);border-color:var(--accent);color:#102326}
+    .sheet{background:var(--panel);border:1px solid rgba(180,198,228,.13);border-radius:20px;padding:clamp(18px,4vw,34px);box-shadow:0 20px 55px #0004}
+    .section-title{font-size:.75rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-weight:800;margin:0 0 12px}.client{max-width:530px;margin-bottom:28px}.field label{display:block;font-size:.82rem;font-weight:700;margin-bottom:6px}.field input,.line-input{width:100%;border:1px solid var(--line);border-radius:10px;background:#0e1625;color:var(--text);padding:11px 12px;font:inherit;min-width:0}.field input:focus,.line-input:focus{outline:2px solid #78e2cf88;border-color:var(--accent)}
+    .table-wrap{overflow-x:auto}table{border-collapse:collapse;width:100%;min-width:600px}th{text-align:left;color:var(--muted);font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;font-weight:750;padding:0 8px 10px}td{padding:7px 8px;border-top:1px solid rgba(170,190,220,.1)}th:first-child,td:first-child{padding-left:0}th:last-child,td:last-child{padding-right:0}.num{text-align:right}.line-input{text-align:right}.description{text-align:left}.amount{white-space:nowrap;text-align:right;font-variant-numeric:tabular-nums;font-weight:650}.remove{width:34px;height:34px;border:0;border-radius:9px;background:#332431;color:#ffb9be;font-size:1.1rem;cursor:pointer}.remove:hover{background:#50303c}.add-row{margin-top:12px;color:var(--accent);background:transparent;border:1px dashed #4c6e73;border-radius:10px;padding:9px 13px;font:inherit;font-weight:700;cursor:pointer}.add-row:hover{background:#78e2cf12}
+    .summary{display:flex;justify-content:flex-end;margin-top:22px}.total-box{width:min(100%,310px);border:1px solid #385c5d;background:var(--accent-dark);border-radius:15px;padding:17px 20px}.total-label{color:#b7d9d4;font-size:.8rem;text-transform:uppercase;letter-spacing:.1em;font-weight:750}.total{font-size:clamp(1.6rem,6vw,2.2rem);line-height:1.2;font-weight:850;font-variant-numeric:tabular-nums;margin-top:4px}.currency{color:#b7d9d4;font-size:.9rem;font-weight:700}.hint{text-align:center;color:var(--muted);font-size:.82rem;margin:20px 0 0}
+    @media(max-width:620px){body{padding:22px 12px}.top{align-items:flex-start;flex-direction:column}.actions{width:100%}.actions .button{flex:1}}
+    @media print{ @page{size:A4;margin:16mm} :root{color-scheme:light}body{background:#fff;color:#172033;padding:0;font-size:12pt}.top{margin-bottom:20px}.eyebrow,.section-title{color:#526275}.intro{color:#586679}.sheet{background:#fff;border:0;border-radius:0;padding:0;box-shadow:none}.actions,.add-row,.remove,.hint{display:none!important}.field input,.line-input{background:#fff;border:0;border-radius:0;color:#172033;padding:3px 0;box-shadow:none}.field input{border-bottom:1px solid #d1d7e0}.line-input{text-align:right}.description{text-align:left}.client{margin-bottom:25px}th{color:#526275}td{border-color:#d9dee7}.total-box{background:#e6f5f2;border-color:#afd5ce;color:#132c2b}.total-label,.currency{color:#3e6662}.table-wrap{overflow:visible}table{min-width:0}}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header class="top">
+      <div><div class="eyebrow">Document commercial</div><h1>Votre devis</h1><p class="intro">Renseignez le client et les prestations : le total se met à jour automatiquement.</p></div>
+      <div class="actions"><button type="button" class="button primary" id="print">Imprimer / PDF</button></div>
+    </header>
+    <section class="sheet" aria-label="Générateur de devis">
+      <div class="client field"><p class="section-title">Client</p><label for="client">Nom du client</label><input id="client" type="text" placeholder="Ex. : Soa Rakoto" autocomplete="name"></div>
+      <p class="section-title">Prestations</p>
+      <div class="table-wrap"><table>
+        <thead><tr><th style="width:48%">Description</th><th class="num" style="width:14%">Quantité</th><th class="num" style="width:20%">Prix unitaire (Ar)</th><th class="num" style="width:16%">Montant</th><th aria-label="Actions"></th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table></div>
+      <button class="add-row" type="button" id="add">＋ Ajouter une ligne</button>
+      <div class="summary"><div class="total-box"><div class="total-label">Total du devis</div><div class="total"><span id="total">0</span> <span class="currency">Ar</span></div></div></div>
+      <p class="hint">Pour enregistrer en PDF, choisissez « Enregistrer au format PDF » dans la fenêtre d’impression.</p>
+    </section>
+  </main>
+  <template id="line-template"><tr>
+    <td><input class="line-input description" type="text" placeholder="Description de la prestation" aria-label="Description"></td>
+    <td><input class="line-input quantity" type="number" min="0" step="1" value="1" inputmode="numeric" aria-label="Quantité"></td>
+    <td><input class="line-input price" type="number" min="0" step="1" value="0" inputmode="decimal" aria-label="Prix unitaire en Ariary"></td>
+    <td class="amount">0 Ar</td>
+    <td><button class="remove" type="button" aria-label="Supprimer cette ligne" title="Supprimer">×</button></td>
+  </tr></template>
+  <script>
+    (() => {
+      const rows = document.getElementById('rows');
+      const totalOutput = document.getElementById('total');
+      const numberFormat = new Intl.NumberFormat('fr-FR', {maximumFractionDigits: 0});
+      function update() {
+        let total = 0;
+        rows.querySelectorAll('tr').forEach(row => {
+          const quantity = Math.max(0, Number(row.querySelector('.quantity').value) || 0);
+          const price = Math.max(0, Number(row.querySelector('.price').value) || 0);
+          const amount = quantity * price;
+          total += amount;
+          row.querySelector('.amount').textContent = `${numberFormat.format(amount)} Ar`;
+        });
+        totalOutput.textContent = numberFormat.format(total);
+      }
+      function addLine() {
+        const row = document.getElementById('line-template').content.firstElementChild.cloneNode(true);
+        row.addEventListener('input', update);
+        row.querySelector('.remove').addEventListener('click', () => { row.remove(); update(); });
+        rows.append(row);
+        row.querySelector('.description').focus();
+        update();
+      }
+      document.getElementById('add').addEventListener('click', addLine);
+      document.getElementById('print').addEventListener('click', () => window.print());
+      addLine();
+    })();
+  </script>
+</body>
+</html>

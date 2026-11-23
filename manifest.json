@@ -1,0 +1,14 @@
+{
+  "name": "Parlons — apprendre le français",
+  "short_name": "Parlons",
+  "description": "Leçons, cartes, quiz et conjugaison pour apprendre le français.",
+  "lang": "fr",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#10131d",
+  "theme_color": "#10131d",
+  "icons": [
+    {"src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable"}
+  ]
+}
